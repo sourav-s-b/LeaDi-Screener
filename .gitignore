@@ -14,11 +14,12 @@ env/
 *.egg
 
 # ── Models (large binary files — store in cloud storage) ─────────────────────
-backend/models/*.pt
+# backend/models/*.pt
 backend/models/*.pth
 backend/models/*.onnx
-backend/models/*.joblib
-backend/models/*.pkl
+# backend/models/*.joblib
+# backend/models/*.pkl 
+# for convenience sake i am storing model stuff in github
 
 # ── Sessions store (user data — do not commit) ────────────────────────────────
 backend/sessions_store/*.json
