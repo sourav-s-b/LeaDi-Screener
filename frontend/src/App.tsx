@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import React from 'react';
+=======
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar               from './components/layout/Sidebar';
 import Header                from './components/layout/Header';

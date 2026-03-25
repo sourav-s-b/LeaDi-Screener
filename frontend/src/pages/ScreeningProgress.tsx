@@ -1,6 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { Mic, Eye, PenLine, CheckCircle2, ArrowRight, Lock, RotateCcw } from 'lucide-react';
+=======
+import { Mic, Eye, PenLine, CheckCircle2, ArrowRight, Lock } from 'lucide-react';
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 import { getRiskConfig } from '../components/ui/RiskMeter';
 
 export type StepStatus = 'pending' | 'active' | 'done';
@@ -13,16 +17,25 @@ export interface ScreeningStep {
   route: string;
 }
 
+<<<<<<< HEAD
 export const STEPS: ScreeningStep[] = [
   { id: 'handwriting', label: 'Handwriting', tag: 'Vision',  icon: PenLine, route: '/screening/handwriting' },
   { id: 'dysarthria',  label: 'Speech',      tag: 'Audio',   icon: Mic,     route: '/screening/dysarthria'  },
   { id: 'dyslexia',   label: 'Eye Tracking', tag: 'Gaze',   icon: Eye,     route: '/screening/dyslexia'    },
+=======
+// ORDER: Handwriting → Speech → Eye Tracking
+export const STEPS: ScreeningStep[] = [
+  { id: 'handwriting', label: 'Handwriting', tag: 'Vision',       icon: PenLine, route: '/screening/handwriting' },
+  { id: 'dysarthria',  label: 'Speech',      tag: 'Audio',        icon: Mic,     route: '/screening/dysarthria'  },
+  { id: 'dyslexia',   label: 'Eye Tracking', tag: 'Gaze',        icon: Eye,     route: '/screening/dyslexia'    },
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 ];
 
 interface Props {
   results:    Record<string, { risk: number; label: string }>;
   activeStep: number;
   onNext:     () => void;
+<<<<<<< HEAD
   onRetry:    (id: string) => void;
 }
 
@@ -30,6 +43,13 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
   const navigate = useNavigate();
   const allDone  = STEPS.every(s => results[s.id]);
   const anyDone  = STEPS.some(s => results[s.id]);
+=======
+}
+
+export default function ScreeningProgress({ results, activeStep, onNext }: Props) {
+  const navigate = useNavigate();
+  const allDone  = Object.keys(results).length === 3;
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 
   const getStatus = (idx: number): StepStatus => {
     const step = STEPS[idx];
@@ -42,11 +62,19 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
     <div className="max-w-xl mx-auto py-8 space-y-8 animate-fade-up">
       <div className="text-center space-y-1">
         <h2 className="text-xl font-display font-700 text-slate-900">
+<<<<<<< HEAD
           {allDone ? 'Screening Complete' : anyDone ? 'Screening in Progress' : 'Ready to Begin'}
         </h2>
         <p className="text-sm text-slate-400">
           {allDone
             ? 'All modules complete. View your result or retry any test.'
+=======
+          {allDone ? 'Screening Complete' : 'Screening in Progress'}
+        </h2>
+        <p className="text-sm text-slate-400">
+          {allDone
+            ? 'All three modules completed.'
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
             : `Step ${Math.min(activeStep + 1, 3)} of 3 — ${STEPS[activeStep]?.label ?? ''}`}
         </p>
       </div>
@@ -63,6 +91,7 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
           return (
             <React.Fragment key={step.id}>
               <div className="flex flex-col items-center gap-2">
+<<<<<<< HEAD
                 <div className="relative group">
                   <button
                     onClick={() => isDone ? navigate(step.route) : isActive ? onNext() : undefined}
@@ -101,6 +130,32 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
                   )}
                 </div>
 
+=======
+                <button
+                  onClick={() => isDone && navigate(step.route)}
+                  disabled={!isDone && !isActive}
+                  className={[
+                    'w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 relative',
+                    isDone   ? 'shadow-md cursor-pointer hover:scale-105' : '',
+                    isActive ? 'bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg ring-4 ring-brand-200 scale-110' : '',
+                    !isDone && !isActive ? 'bg-slate-100 cursor-not-allowed' : '',
+                  ].join(' ')}
+                  style={isDone && riskCfg ? {
+                    background: `linear-gradient(135deg, ${riskCfg.color}99, ${riskCfg.color})`
+                  } : {}}
+                >
+                  {isDone ? (
+                    <span className="text-white text-sm font-bold">{Math.round(risk!.risk * 100)}%</span>
+                  ) : isActive ? (
+                    <step.icon size={22} className="text-white" strokeWidth={1.75} />
+                  ) : (
+                    <Lock size={16} className="text-slate-300" />
+                  )}
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-full ring-2 ring-brand-400 animate-ping opacity-30" />
+                  )}
+                </button>
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
                 <div className="text-center">
                   <p className={`text-xs font-semibold ${isActive ? 'text-brand-700' : isDone ? 'text-slate-700' : 'text-slate-300'}`}>
                     {step.label}
@@ -108,23 +163,33 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
                   {isDone && riskCfg && (
                     <p className="text-[10px]" style={{ color: riskCfg.color }}>{riskCfg.label}</p>
                   )}
+<<<<<<< HEAD
                   {isDone && (
                     <button onClick={() => onRetry(step.id)}
                       className="text-[10px] text-slate-400 hover:text-brand-500 transition-colors mt-0.5">
                       retry
                     </button>
                   )}
+=======
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
                   {isActive && <p className="text-[10px] text-brand-500 animate-pulse">Active</p>}
                 </div>
               </div>
 
+<<<<<<< HEAD
               {i < STEPS.length - 1 && (
                 <div className={`w-10 h-0.5 mb-8 transition-colors duration-500 ${isDone ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+=======
+              {/* Connector */}
+              {i < STEPS.length - 1 && (
+                <div className={`w-10 h-0.5 mb-6 transition-colors duration-500 ${isDone ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
               )}
             </React.Fragment>
           );
         })}
 
+<<<<<<< HEAD
         {/* Final result circle */}
         <div className={`w-10 h-0.5 mb-8 transition-colors duration-500 ${allDone ? 'bg-emerald-300' : 'bg-slate-200'}`} />
         <div className="flex flex-col items-center gap-2">
@@ -141,10 +206,29 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
           <div className="text-center">
             <p className={`text-xs font-semibold ${anyDone ? 'text-slate-700' : 'text-slate-300'}`}>Result</p>
             {anyDone && <p className="text-[10px] text-emerald-600">Ready</p>}
+=======
+        {/* → Final result circle */}
+        <div className={`w-10 h-0.5 mb-6 transition-colors duration-500 ${allDone ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+        <div className="flex flex-col items-center gap-2">
+          <button
+            onClick={() => allDone && navigate('/screening/result')}
+            disabled={!allDone}
+            className={[
+              'w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300',
+              allDone ? 'bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg cursor-pointer hover:scale-105' : 'bg-slate-100 cursor-not-allowed',
+            ].join(' ')}
+          >
+            <CheckCircle2 size={22} className={allDone ? 'text-white' : 'text-slate-300'} strokeWidth={1.75} />
+          </button>
+          <div className="text-center">
+            <p className={`text-xs font-semibold ${allDone ? 'text-slate-700' : 'text-slate-300'}`}>Result</p>
+            {allDone && <p className="text-[10px] text-emerald-600">Ready</p>}
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
           </div>
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Action */}
       <div className="flex justify-center gap-3">
         {anyDone && (
@@ -155,15 +239,33 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
         {!allDone && (
           <button onClick={onNext} className="btn-primary px-6 py-2.5">
             {activeStep === 0 && !anyDone ? 'Begin' : 'Continue'} — {STEPS[Math.max(0, activeStep)]?.label}
+=======
+      {/* Action button */}
+      <div className="flex justify-center">
+        {allDone ? (
+          <button onClick={() => navigate('/screening/result')} className="btn-primary px-6 py-2.5">
+            View Final Report <ArrowRight size={14} />
+          </button>
+        ) : (
+          <button onClick={onNext} className="btn-primary px-6 py-2.5">
+            {activeStep === 0 ? 'Begin' : 'Continue'} — {STEPS[activeStep]?.label}
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
             <ArrowRight size={14} />
           </button>
         )}
       </div>
 
+<<<<<<< HEAD
       {/* Mini results */}
       {anyDone && (
         <div className="card p-4 space-y-2">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Results</p>
+=======
+      {/* Mini results so far */}
+      {Object.keys(results).length > 0 && (
+        <div className="card p-4 space-y-2">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Results so far</p>
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
           {STEPS.filter(s => results[s.id]).map(s => {
             const r = results[s.id];
             const cfg = getRiskConfig(r.risk);
@@ -177,9 +279,12 @@ export default function ScreeningProgress({ results, activeStep, onNext, onRetry
                 <span className="text-xs font-mono font-medium" style={{ color: cfg.color }}>
                   {Math.round(r.risk * 100)}%
                 </span>
+<<<<<<< HEAD
                 <button onClick={() => onRetry(s.id)} className="btn-ghost py-0.5 px-2 text-[11px]">
                   <RotateCcw size={10} /> retry
                 </button>
+=======
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
               </div>
             );
           })}

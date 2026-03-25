@@ -10,6 +10,7 @@ import { getRiskConfig } from '../components/ui/RiskMeter';
 
 const TESTS = [
   {
+<<<<<<< HEAD
     icon: Mic,
     label: 'Dysarthria Detection',
     tag: 'Speech',
@@ -30,6 +31,8 @@ const TESTS = [
     details: ['Range-detection calibration', 'Kalman-smoothed iris tracking', 'RF+SVM+XGBoost ensemble'],
   },
   {
+=======
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
     icon: PenLine,
     label: 'Handwriting Analysis',
     tag: 'Vision',
@@ -39,6 +42,30 @@ const TESTS = [
     desc: 'Upload a photo of handwritten text. YOLOv8 detects letter reversals, mirror-writing, and orientation errors associated with dyslexia.',
     details: ['Per-letter segmentation grid', 'Polarity normalisation', 'Normal / Reversal / Corrected'],
   },
+<<<<<<< HEAD
+=======
+  {
+    icon: Mic,
+    label: 'Speech Analyses',
+    tag: 'Voice',
+    tagCls: 'badge-blue',
+    accent: 'from-violet-500 to-purple-600',
+    iconBg: 'bg-violet-50 border-violet-100 text-violet-600',
+    desc: 'Record speech via the python app. CNN+BiLSTM with pitch normalisation analyses MFCCfeatures to detect motor speech disorder patterns.',
+    details: ['Overlapping 6.79s windows', 'Pitch-normalised MFCC', 'Gender-conditioned model'],
+  },
+  {
+    icon: Eye,
+    label: 'Eye-Tracking Analysis',
+    tag: 'Gaze',
+    tagCls: 'badge-blue',
+    accent: 'from-sky-500 to-cyan-600',
+    iconBg: 'bg-sky-50 border-sky-100 text-sky-600',
+    desc: 'Live webcam session launched from this page. Displacement-based calibration + ensemble model (RF+SVM+XGBoost) classifies 18 gaze features.',
+    details: ['Range-detection calibration', 'Kalman-smoothed iris tracking', 'RF+SVM+XGBoost ensemble'],
+  },
+  
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 ];
 
 const TOOL_ICON: Record<string, React.ElementType> = { dysarthria: Mic, dyslexia: Eye, handwriting: PenLine };
@@ -63,17 +90,26 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section className="text-center space-y-5 pt-4">
+<<<<<<< HEAD
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-50 border border-brand-100 rounded-full">
           <Sparkles size={12} className="text-brand-500" />
           
         </div>
         <h1 className="text-4xl font-display font-700 text-slate-900 leading-tight tracking-tight">
           Dyslexia & Dysarthria<br />
+=======
+        <h1 className="text-4xl font-display font-700 text-slate-900 leading-tight tracking-tight">
+          Learning Disablity<br />
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
           <span className="text-brand-600">Screening Dashboard</span>
         </h1>
         <p className="text-base text-slate-500 max-w-xl mx-auto leading-relaxed">
           A three-module AI system that screens for speech and reading disorders
+<<<<<<< HEAD
           using audio analysis, live eye-tracking, and handwriting recognition —
+=======
+          using audio analysis, live eye-tracking, and handwriting recognition.
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
         </p>
         <button
           onClick={() => navigate('/screening')}
@@ -151,7 +187,11 @@ export default function Home() {
         <div className="relative z-10 space-y-4">
           <h2 className="text-xl font-display font-700">Ready to begin?</h2>
           <p className="text-sm text-brand-100 max-w-md mx-auto">
+<<<<<<< HEAD
             The full screening takes approximately 10–15 minutes across all three modules.
+=======
+            The full screening takes approximately 5-10 minutes across all three modules.
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
             Results are stored locally and never leave your device.
           </p>
           <button

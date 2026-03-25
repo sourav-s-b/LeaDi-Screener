@@ -12,7 +12,11 @@ interface Config {
   dyslexiaMeta:         string;
   dyslexiaThreshold:    string;
   handwritingModelPath: string;
+<<<<<<< HEAD
   
+=======
+  faceLandmarkerPath:   string;
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 }
 
 const DEFAULTS: Config = {
@@ -24,11 +28,19 @@ const DEFAULTS: Config = {
   dyslexiaRfecv:        'models/dyslexia_rfecv.joblib',
   dyslexiaMeta:         'models/dyslexia_feature_meta.json',
   dyslexiaThreshold:    '0.5',
+<<<<<<< HEAD
   handwritingModelPath: 'models/best_mobilenet.pth',
   
 };
 
 const KEY = 'leadis_settings';
+=======
+  handwritingModelPath: 'models/handwriting_yolo.pt',
+  faceLandmarkerPath:   'face_landmarker.task',
+};
+
+const KEY = 'neuroscan_settings';
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 
 export default function SettingsPage() {
   const [cfg, setCfg]     = useState<Config>(DEFAULTS);
@@ -119,6 +131,10 @@ export default function SettingsPage() {
         <Field label="Feature meta (.json)"       k="dyslexiaMeta"    mono />
         <div className="grid grid-cols-2 gap-4">
           <Field label="Decision threshold" k="dyslexiaThreshold" mono hint="Default: 0.5" />
+<<<<<<< HEAD
+=======
+          <Field label="face_landmarker.task" k="faceLandmarkerPath" mono hint="MediaPipe model file" />
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
         </div>
       </div>
 
@@ -133,7 +149,11 @@ export default function SettingsPage() {
             <p className="text-[11px] text-slate-400">YOLOv8 letter reversal detector</p>
           </div>
         </div>
+<<<<<<< HEAD
         <Field label="Handwriting model (.pth)" k="handwritingModelPath" mono />
+=======
+        <Field label="YOLO weights (.pt)" k="handwritingModelPath" mono />
+>>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
       </div>
 
       {/* Actions */}
