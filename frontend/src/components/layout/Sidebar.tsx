@@ -1,20 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-<<<<<<< HEAD
 import { Home, PlayCircle, Activity, Settings } from 'lucide-react';
 
 const NAV = [
   { to: '/',          icon: Home,        label: 'Home',      end: true },
   { to: '/screening', icon: PlayCircle,  label: 'Screening'            },
   { to: '/sessions',  icon: Activity,    label: 'Sessions'             },
-=======
-import { Home, PlayCircle, Activity, BarChart3, Settings } from 'lucide-react';
-
-const NAV = [
-  { to: '/',         icon: Home,        label: 'Home',     end: true },
-  { to: '/screening',icon: PlayCircle,  label: 'Screening'           },
-  { to: '/sessions', icon: Activity,    label: 'Sessions'            },
->>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
 ];
 const BOTTOM = [
   { to: '/settings', icon: Settings, label: 'Settings' },

@@ -177,3 +177,37 @@ async def _run_live_session(ws: WebSocket, duration: float):
                          label=result.label, result=result.model_dump()))
 
     await ws.send_json({"type": "result", "data": result.model_dump()})
+
+from pydantic import BaseModel
+from typing import List
+
+# 1. Define the expected JSON structure from React
+class RawGazePayload(BaseModel):
+    gaze_data: List[List[float]]
+
+@router.post("/predict_raw", response_model=DyslexiaResult)
+async def predict_raw_json(payload: RawGazePayload):
+    """
+    Receive raw [[t, lx, ly, rx, ry], ...] from the React frontend.
+    This replaces the need for the frontend to calculate fake features.
+    """
+    # Convert the JSON list of lists directly into a numpy array
+    arr = np.array(payload.gaze_data, dtype=np.float32)
+    
+    if arr.ndim != 2 or arr.shape[1] not in (4, 5):
+        raise HTTPException(422, f"Expected (N,4) or (N,5), got {arr.shape}.")
+        
+    # If the frontend sent timestamps (5 columns), strip the first column
+    if arr.shape[1] == 5:
+        arr = arr[:, 1:]
+        
+    try:
+        # Pass the array to your existing service
+        result = await dyslexia_service.predict_from_array(arr)
+    except RuntimeError as e:
+        raise HTTPException(422, str(e))
+        
+    # Save session and return
+    save_session(Session(tool="dyslexia", risk=result.risk,
+                         label=result.label, result=result.model_dump()))
+    return result

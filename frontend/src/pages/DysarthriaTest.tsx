@@ -6,21 +6,14 @@ import { api, apiEndpoints } from '../lib/api';
 import { DysarthriaResult, Status } from '../types';
 
 interface Props {
-<<<<<<< HEAD
   isRetry?: boolean;
-=======
->>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
   onComplete: (risk: number, label: string, result: DysarthriaResult) => void;
 }
 
 type Mode  = 'desktop' | 'file';
 type Phase = 'idle' | 'launching' | 'recording' | 'done' | 'error';
 
-<<<<<<< HEAD
 export default function DysarthriaTest({ onComplete, isRetry }: Props) {
-=======
-export default function DysarthriaTest({ onComplete }: Props) {
->>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
   const [mode,     setMode]    = useState<Mode>('desktop');
   const [phase,    setPhase]   = useState<Phase>('idle');
   const [gender,   setGender]  = useState<'male' | 'female'>('male');
@@ -146,11 +139,7 @@ export default function DysarthriaTest({ onComplete }: Props) {
           <Mic size={16} className="text-violet-600" />
         </div>
         <div>
-<<<<<<< HEAD
           <h2 className="text-sm font-semibold text-slate-800 mb-1">Speech Dysarthria Test {isRetry && <span className="badge badge-amber ml-1">Retry</span>}</h2>
-=======
-          <h2 className="text-sm font-semibold text-slate-800 mb-1">Speech Dysarthria Test</h2>
->>>>>>> 33f15c0dc22504283b346af414bc23b2dc1340c0
           <p className="text-xs text-slate-500 leading-relaxed">
             Records via your system microphone at 16kHz PCM — identical to the TORGO training format.
             A small recording window will open on your desktop automatically.
