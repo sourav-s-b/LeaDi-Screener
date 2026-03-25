@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eye‑tracking Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/webgazer@2.1.0/dist/webgazer.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #f8f9fa;
+        overflow: hidden;
+      }
+
+      /* WebGazer video container – controlled by body classes */
+      #webgazerVideoContainer {
+        z-index: 20000 !important;
+      }
+      body.aligning #webgazerVideoContainer {
+        display: block !important;
+        position: fixed !important;
+        top: 45% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 480px !important;
+        height: 360px !important;
+        border: 8px solid #28a745 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+      }
+      body.calibrating #webgazerVideoContainer,
+      body.reading #webgazerVideoContainer {
+        display: block !important;
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        left: auto !important;
+        transform: none !important;
+        width: 160px !important;
+        height: 120px !important;
+        border: 2px solid #ccc !important;
+        border-radius: 8px !important;
+      }
+      body.reading #webgazerVideoContainer {
+        opacity: 1;
+      }
+      body.done #webgazerVideoContainer,
+      body.error #webgazerVideoContainer {
+        display: none !important;
+      }
+
+      /* Panels */
+      .panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      /* Calibration points */
+      .calib-point {
+        width: 20px;
+        height: 20px;
+        background: #007bff;
+        border-radius: 50%;
+        position: absolute;
+        cursor: pointer;
+        z-index: 25000;
+      }
+
+      /* Reading area */
+      #reading-container {
+        max-width: 800px;
+        margin: 80px auto 0;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        line-height: 2.2;
+        font-size: 28px;
+        font-family: serif;
+        color: #1e293b;
+      }
+      #reading-container p {
+        margin-bottom: 1.5em;
+      }
+
+      /* Gaze dots */
+      #gaze-dot {
+        position: fixed;
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 0, 0, 0.7);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        display: none;
+      }
+      #fixation-dot {
+        position: fixed;
+        width: 44px;
+        height: 44px;
+        background: rgba(0, 123, 255, 0.3);
+        border: 2px solid #007bff;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9998;
+        display: none;
+      }
+
+      /* Controls */
+      button {
+        padding: 12px 24px;
+        margin: 5px;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body class="aligning">
+    <div id="gaze-dot"></div>
+    <div id="fixation-dot"></div>
+
+    <!-- Aligning panel -->
+    <div id="align-panel" class="panel">
+      <h2 style="margin-bottom: 400px">Step 1: Face & Light Check</h2>
+      <div>
+        <p id="loading-text" style="color: #d32f2f; font-weight: bold">
+          Requesting Camera Access...
+        </p>
+        <p id="error-msg" style="color: red"></p>
+        <p>Center your face in the <b>green box</b> above.</p>
+        <button id="align-btn" class="btn-success" disabled>
+          Initializing...
+        </button>
+      </div>
+    </div>
+
+    <!-- Calibration panel -->
+    <div id="calibration-panel" class="panel hidden">
+      <div style="text-align: center; padding-top: 50px">
+        <h2>Step 2: Calibration</h2>
+        <p>
+          Stare at each blue dot and <b>click it 5 times</b>. Points left:
+          <span id="pt-progress">9</span>
+        </p>
+      </div>
+      <!-- 9 calibration points -->
+      <div
+        class="calib-point"
+        style="top: 15%; left: 15%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 15%; left: 50%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 15%; left: 85%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 50%; left: 15%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 50%; left: 50%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 50%; left: 85%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 85%; left: 15%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 85%; left: 50%"
+        data-clicks="0"
+      ></div>
+      <div
+        class="calib-point"
+        style="top: 85%; left: 85%"
+        data-clicks="0"
+      ></div>
+    </div>
+
+    <!-- Reading panel -->
+    <div id="reading-panel" class="panel hidden">
+      <div id="reading-container"></div>
+      <div
+        style="
+          position: fixed;
+          bottom: 40px;
+          left: 0;
+          right: 0;
+          text-align: center;
+        "
+      >
+        <button id="finish-reading-btn" class="btn-primary">
+          I'm Finished Reading
+        </button>
+      </div>
+      <div
+        style="
+          position: fixed;
+          bottom: 20px;
+          left: 20px;
+          right: 20px;
+          background: white;
+          padding: 10px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 14px;
+        "
+      >
+        <span>Fixations: <b id="fix-count">0</b></span> &nbsp;|&nbsp;
+        <span>Time: <b id="timer">0</b> / <b id="total-duration">30</b> s</span>
+      </div>
+    </div>
+
+    <!-- Error panel (optional) -->
+    <div id="error-panel" class="panel hidden">
+      <h2>Error</h2>
+      <p id="error-message"></p>
+      <button onclick="window.location.href = '/screening/dyslexia'">
+        Back
+      </button>
+    </div>
+
+    <script>
+      // ---------- DOM elements ----------
+      const alignPanel = document.getElementById("align-panel");
+      const calPanel = document.getElementById("calibration-panel");
+      const readingPanel = document.getElementById("reading-panel");
+      const errorPanel = document.getElementById("error-panel");
+      const gazeDot = document.getElementById("gaze-dot");
+      const fixDot = document.getElementById("fixation-dot");
+      const alignBtn = document.getElementById("align-btn");
+      const loadingText = document.getElementById("loading-text");
+      const errorMsgSpan = document.getElementById("error-msg");
+      const finishBtn = document.getElementById("finish-reading-btn");
+      const fixCountSpan = document.getElementById("fix-count");
+      const timerSpan = document.getElementById("timer");
+      const totalDurSpan = document.getElementById("total-duration");
+
+      // ---------- Data ----------
+      let rawLogs = []; // {x,y,t}
+      let fixations = []; // {x,y,dur}
+      let windowBuffer = []; // for fixation detection
+      let recording = false;
+      let readingStartTime = 0;
+      let readingTimer = null;
+      let readingDuration = 30; // will be set from URL
+      let fixationCount = 0;
+
+      // Parameters from working example
+      const DISTANCE_THRESHOLD = 80;
+      const TIME_THRESHOLD = 150;
+
+      // ---------- WebGazer setup ----------
+      function initWebGazer() {
+        // Set the gaze listener
+        webgazer.setGazeListener((data, elapsedTime) => {
+          if (!data) return;
+          // Show gaze dot
+          gazeDot.style.display = "block";
+          gazeDot.style.left = data.x + "px";
+          gazeDot.style.top = data.y + "px";
+
+          if (recording) {
+            const pt = {
+              x: Math.round(data.x),
+              y: Math.round(data.y),
+              t: Math.round(elapsedTime),
+            };
+            rawLogs.push(pt);
+            processFixation(pt);
+          }
+        });
+
+        // Begin tracking (returns a promise)
+        webgazer
+          .begin()
+          .then(() => {
+            // Once tracking starts, enable the alignment button and set its click handler
+            loadingText.style.display = "none";
+            alignBtn.disabled = false;
+            alignBtn.innerText = "My Face is Centered →";
+            alignBtn.onclick = () => {
+              document.body.className = "calibrating";
+              alignPanel.classList.add("hidden");
+              calPanel.classList.remove("hidden");
+            };
+            // Configure preview and filters
+            webgazer
+              .showVideoPreview(true)
+              .showPredictionPoints(false)
+              .applyKalmanFilter(true);
+          })
+          .catch((err) => {
+            console.error("WebGazer start failed:", err);
+            showError("Failed to start eye tracking: " + err.message);
+          });
+      }
+
+      function processFixation(point) {
+        windowBuffer.push(point);
+        const xs = windowBuffer.map((p) => p.x);
+        const ys = windowBuffer.map((p) => p.y);
+        const spread =
+          Math.max(...xs) -
+          Math.min(...xs) +
+          (Math.max(...ys) - Math.min(...ys));
+        const duration =
+          windowBuffer[windowBuffer.length - 1].t - windowBuffer[0].t;
+
+        if (spread > DISTANCE_THRESHOLD) {
+          if (duration >= TIME_THRESHOLD) {
+            const avgX = xs.reduce((a, b) => a + b) / xs.length;
+            const avgY = ys.reduce((a, b) => a + b) / ys.length;
+            fixations.push({
+              x: Math.round(avgX),
+              y: Math.round(avgY),
+              dur: duration,
+            });
+            fixationCount++;
+            fixCountSpan.innerText = fixationCount;
+            // Show fixation dot briefly
+            fixDot.style.display = "block";
+            fixDot.style.left = avgX - 22 + "px";
+            fixDot.style.top = avgY - 22 + "px";
+            setTimeout(() => {
+              fixDot.style.display = "none";
+            }, 200);
+          }
+          windowBuffer = [point];
+        }
+      }
+
+      // ---------- Calibration ----------
+      let pointsLeft = 9;
+      const calPoints = document.querySelectorAll(".calib-point");
+      const ptProgressSpan = document.getElementById("pt-progress");
+
+      function handleCalibrationClick(e) {
+        const pt = e.currentTarget;
+        let clicks = parseInt(pt.getAttribute("data-clicks")) + 1;
+        pt.setAttribute("data-clicks", clicks);
+        pt.style.opacity = 1 - clicks * 0.2;
+        if (clicks >= 5) {
+          pt.style.display = "none";
+          pointsLeft--;
+          ptProgressSpan.innerText = pointsLeft;
+          if (pointsLeft === 0) {
+            // Calibration done – start reading
+            startReading();
+          }
+        }
+      }
+      calPoints.forEach((pt) =>
+        pt.addEventListener("click", handleCalibrationClick),
+      );
+
+      // ---------- Reading ----------
+      const paragraphs = [
+        "The quick brown fox jumps over the lazy dog. Reading carefully is a skill that takes time to master. Eye tracking technology reveals where our attention flows on the page.",
+        "She opened the old wooden door and stepped inside. The room smelled of dust and forgotten things. On the table lay a leather-bound book, its pages yellowed with age.",
+        "The human brain contains approximately eighty-six billion neurons, each connected to thousands of others through synaptic junctions. Signals travel at remarkable speeds.",
+      ];
+
+      function startReading() {
+        // Switch panels
+        document.body.className = "reading";
+        alignPanel.classList.add("hidden");
+        calPanel.classList.add("hidden");
+        readingPanel.classList.remove("hidden");
+
+        // Fill reading container
+        const container = document.getElementById("reading-container");
+        container.innerHTML = paragraphs.map((p) => `<p>${p}</p>`).join("");
+
+        // Start recording
+        recording = true;
+        rawLogs = [];
+        fixations = [];
+        windowBuffer = [];
+        fixationCount = 0;
+        fixCountSpan.innerText = "0";
+
+        readingStartTime = performance.now();
+        let elapsed = 0;
+        timerSpan.innerText = elapsed;
+        totalDurSpan.innerText = readingDuration;
+
+        readingTimer = setInterval(() => {
+          elapsed++;
+          timerSpan.innerText = elapsed;
+          if (elapsed >= readingDuration) {
+            // Time's up – finish test
+            finishTest();
+          }
+        }, 1000);
+      }
+
+      function finishTest() {
+        console.log("finishTest called"); // <-- debug
+
+        // Stop recording and timer
+        if (readingTimer) clearInterval(readingTimer);
+        recording = false;
+
+        // Calculate total reading duration (seconds)
+        const totalTime = Math.round(
+          (performance.now() - readingStartTime) / 1000,
+        );
+
+        // Prepare data to send back
+        const testData = {
+          raw: rawLogs,
+          fixations: fixations.map((f) => ({
+            x: f.x,
+            y: f.y,
+            duration: f.dur,
+          })),
+          duration: totalTime,
+        };
+        sessionStorage.setItem("dyslexiaTestResult", JSON.stringify(testData));
+        console.log("Data stored in sessionStorage");
+
+        // Clean up webcam (with error handling)
+        try {
+          const videoEl = document.getElementById("webgazerVideoFeed");
+          if (videoEl && videoEl.srcObject) {
+            videoEl.srcObject.getTracks().forEach((t) => t.stop());
+          }
+          if (window.webgazer) {
+            window.webgazer.end();
+          }
+        } catch (cleanupErr) {
+          console.error("Error during webcam cleanup:", cleanupErr);
+        }
+
+        // Redirect back to React app – ensure this always happens
+        console.log("Redirecting to /screening/dyslexia");
+        window.location.href = "/screening/dyslexia";
+      }
+
+      // ---------- Error handling ----------
+      function showError(msg) {
+        document.body.className = "error";
+        alignPanel.classList.add("hidden");
+        calPanel.classList.add("hidden");
+        readingPanel.classList.add("hidden");
+        errorPanel.classList.remove("hidden");
+        document.getElementById("error-message").innerText = msg;
+      }
+
+      // ---------- Entry point ----------
+      window.onload = () => {
+        // Get duration from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        readingDuration = parseInt(urlParams.get("duration")) || 30;
+
+        if (location.protocol === "file:") {
+          showError(
+            "Please run this page from a local server (e.g., VS Code Live Server).",
+          );
+          return;
+        }
+
+        // Check if webgazer is loaded
+        if (typeof webgazer === "undefined") {
+          showError("WebGazer failed to load. Check internet connection.");
+          return;
+        }
+
+        // Start WebGazer
+        initWebGazer();
+      };
+
+      // Cleanup on beforeunload (in case user closes tab)
+      window.addEventListener("beforeunload", () => {
+        if (window.webgazer) {
+          const videoEl = document.getElementById("webgazerVideoFeed");
+          if (videoEl && videoEl.srcObject) {
+            videoEl.srcObject.getTracks().forEach((t) => t.stop());
+          }
+          window.webgazer.end();
+        }
+      });
+
+      // Finish button listener
+      finishBtn.addEventListener("click", finishTest);
+    </script>
+  </body>
+</html>
