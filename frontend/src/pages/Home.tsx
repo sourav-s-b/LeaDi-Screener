@@ -10,6 +10,16 @@ import { getRiskConfig } from '../components/ui/RiskMeter';
 
 const TESTS = [
   {
+    icon: PenLine,
+    label: 'Handwriting Analysis',
+    tag: 'Vision',
+    tagCls: 'badge-green',
+    accent: 'from-emerald-500 to-teal-600',
+    iconBg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+    desc: 'Upload a photo of handwritten text. YOLOv8 detects letter reversals, mirror-writing, and orientation errors associated with dyslexia.',
+    details: ['Per-letter segmentation grid', 'Polarity normalisation', 'Normal / Reversal / Corrected'],
+  },
+  {
     icon: Mic,
     label: 'Dysarthria Detection',
     tag: 'Speech',
@@ -29,16 +39,7 @@ const TESTS = [
     desc: 'Live webcam session launched from this page. Displacement-based calibration + ensemble model (RF+SVM+XGBoost, AUC=0.98) classifies 18 gaze features.',
     details: ['Range-detection calibration', 'Kalman-smoothed iris tracking', 'RF+SVM+XGBoost ensemble'],
   },
-  {
-    icon: PenLine,
-    label: 'Handwriting Analysis',
-    tag: 'Vision',
-    tagCls: 'badge-green',
-    accent: 'from-emerald-500 to-teal-600',
-    iconBg: 'bg-emerald-50 border-emerald-100 text-emerald-600',
-    desc: 'Upload a photo of handwritten text. YOLOv8 detects letter reversals, mirror-writing, and orientation errors associated with dyslexia.',
-    details: ['Per-letter segmentation grid', 'Polarity normalisation', 'Normal / Reversal / Corrected'],
-  },
+  
 ];
 
 const TOOL_ICON: Record<string, React.ElementType> = { dysarthria: Mic, dyslexia: Eye, handwriting: PenLine };
