@@ -50,6 +50,7 @@ import json
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
+from scipy.signal import stft, detrend
 
 import numpy as np
 
@@ -438,35 +439,106 @@ def _saccade_features(saccades: list) -> dict:
     }
 
 
-def _stft_features(gaze: np.ndarray, n_bins: int = N_BINS) -> dict:
-    x    = gaze[:, 0].copy()
-    nans = np.isnan(x)
-    if nans.all():
-        return {k: 0.0 for k in [
-            "stft_dom_freq_mean", "stft_dom_freq_std", "stft_entropy_mean",
-            "stft_entropy_std", "stft_low_power_mean", "stft_low_power_std",
-            "stft_entropy_range",
-        ]}
-    x[nans] = np.interp(np.where(nans)[0], np.where(~nans)[0], x[~nans])
-    x -= np.mean(x)
-    bin_size = len(x) // n_bins
-    dom_freqs, entropies, low_powers = [], [], []
-    for b in range(n_bins):
-        seg = x[b * bin_size : (b + 1) * bin_size]
-        if len(seg) < 4: continue
-        freqs = np.fft.rfftfreq(len(seg), d=DT)
-        pwr   = np.abs(np.fft.rfft(seg)) ** 2
-        pn    = pwr / (pwr.sum() + 1e-10)
-        dom_freqs.append(float(freqs[np.argmax(pwr)]))
-        entropies.append(float(-np.sum(pn * np.log(pn + 1e-10))))
-        low_powers.append(float(pwr[freqs <= 2.0].sum() / (pwr.sum() + 1e-10)))
+
+def _spectral_entropy(power_vec: np.ndarray, eps: float = 1e-12) -> float:
+    """
+    Normalized Shannon spectral entropy in [0, 1] when possible.
+    """
+    total = np.sum(power_vec)
+    if total <= eps:
+        return 0.0
+
+    p = power_vec / (total + eps)
+    ent = -np.sum(p * np.log2(p + eps))
+    max_ent = np.log2(len(p)) if len(p) > 1 else 1.0
+    return float(ent / (max_ent + eps))
+
+
+def _stft_features(
+    gaze: np.ndarray,
+    fs: int = SAMPLING_RATE,
+    nperseg: int = 64,
+    noverlap: int = 32,
+) -> dict:
+    """
+    True STFT-based features from horizontal gaze trajectory.
+
+    Input:
+        gaze: (N, 2) array from best-eye gaze, columns [x, y]
+
+    Output keys are kept the same as the old implementation so the rest
+    of the engine code does not need to change.
+    """
+    x = gaze[:, 0].astype(float).copy()
+
+    empty_out = {
+        "stft_dom_freq_mean":  0.0,
+        "stft_dom_freq_std":   0.0,
+        "stft_entropy_mean":   0.0,
+        "stft_entropy_std":    0.0,
+        "stft_low_power_mean": 0.0,
+        "stft_low_power_std":  0.0,
+        "stft_entropy_range":  0.0,
+    }
+
+    valid = ~np.isnan(x)
+    if valid.sum() < max(16, nperseg // 2):
+        return empty_out
+
+    # Fill remaining NaNs by linear interpolation
+    idx = np.arange(len(x))
+    x[~valid] = np.interp(idx[~valid], idx[valid], x[valid])
+
+    # Remove slow trend / DC before time-frequency analysis
+    x = detrend(x, type="linear")
+
+    # True STFT
+    f, t, Zxx = stft(
+        x,
+        fs=fs,
+        window="hann",
+        nperseg=nperseg,
+        noverlap=noverlap,
+        boundary=None,
+        padded=False,
+    )
+
+    # Power spectrogram: (freq_bins, time_windows)
+    P = np.abs(Zxx) ** 2
+    if P.size == 0 or P.shape[1] == 0:
+        return empty_out
+
+    low_mask = (f <= 2.0)
+
+    dom_freqs = []
+    entropies = []
+    low_power_ratios = []
+
+    for k in range(P.shape[1]):
+        pk = P[:, k]
+        total = np.sum(pk)
+
+        if total <= 1e-12:
+            dom_freqs.append(0.0)
+            entropies.append(0.0)
+            low_power_ratios.append(0.0)
+            continue
+
+        dom_freqs.append(float(f[np.argmax(pk)]))
+        entropies.append(_spectral_entropy(pk))
+        low_power_ratios.append(float(np.sum(pk[low_mask]) / total))
+
+    dom_freqs = np.asarray(dom_freqs, dtype=float)
+    entropies = np.asarray(entropies, dtype=float)
+    low_power_ratios = np.asarray(low_power_ratios, dtype=float)
+
     return {
         "stft_dom_freq_mean":  float(np.mean(dom_freqs)),
         "stft_dom_freq_std":   float(np.std(dom_freqs)),
         "stft_entropy_mean":   float(np.mean(entropies)),
         "stft_entropy_std":    float(np.std(entropies)),
-        "stft_low_power_mean": float(np.mean(low_powers)),
-        "stft_low_power_std":  float(np.std(low_powers)),
+        "stft_low_power_mean": float(np.mean(low_power_ratios)),
+        "stft_low_power_std":  float(np.std(low_power_ratios)),
         "stft_entropy_range":  float(np.max(entropies) - np.min(entropies)),
     }
 

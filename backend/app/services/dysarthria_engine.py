@@ -476,61 +476,54 @@ class DysarthriaEngine:
     def _load_audio(self, wav_path: str) -> np.ndarray:
         """
         Load and preprocess audio for inference.
-        
+
         Pipeline:
         1. Load + mono + resample
         2. Remove DC offset
-        3. Soft-clip repair  (cubic softening of hard-clipped peaks)
-        4. Normalize to safe level (-3 dBFS)
-        5. Pad/trim to self.seconds
+        3. Soft-clip repair
+        4. Normalize to safe level (-3 dBFS approx)
+        5. Return full waveform (do NOT pad/trim here)
+
+        Windowing/padding for model input is handled later by _chunk_audio().
         """
         import soundfile as sf
         import numpy as np
 
         y, native_sr = sf.read(wav_path, dtype="float32", always_2d=False)
+
+        # Stereo -> mono
         if y.ndim == 2:
             y = y.mean(axis=1)
+
+        # Resample if needed
         if native_sr != self.sr:
             import librosa
             y = librosa.resample(y, orig_sr=native_sr, target_sr=self.sr)
 
-        # 1. Remove DC offset — cheap mic bias throws off MFCC mean
+        # Safety: empty or invalid audio
+        if y is None or len(y) == 0:
+            raise ValueError("Empty audio file.")
+
+        # 1) Remove DC offset
         y = y - y.mean()
 
-        # 2. Soft-clip repair
-        #    Hard clipping (flat tops) creates spectral splatter that looks like
-        #    dysarthric noise. Cubic softening smooths the flat tops back into
-        #    plausible peaks without introducing new artifacts.
+        # 2) Soft-clip repair
         clip_threshold = 0.95
-        clipped = np.abs(y) >= clip_threshold
-        if clipped.mean() > 0.01:   # only repair if >1% is clipped
-            # cubic soft-knee: maps [0.95, 1.0] → smooth curve
-            def softknee(x, threshold=0.95):
-                mask = np.abs(x) > threshold
-                sign = np.sign(x)
-                excess = (np.abs(x) - threshold) / (1.0 - threshold)   # 0→1
-                # cubic ease-out: smooth but doesn't overshoot
-                repaired = threshold + (1.0 - threshold) * (1 - (1 - excess) ** 3)
-                x = np.where(mask, sign * repaired, x)
-                return x
-            y = softknee(y)
+        if (np.abs(y) >= clip_threshold).mean() > 0.01:
+            sign = np.sign(y)
+            abs_y = np.abs(y)
+            mask = abs_y > clip_threshold
+            excess = (abs_y - clip_threshold) / (1.0 - clip_threshold + 1e-9)
+            excess = np.clip(excess, 0, 1)
+            repaired = clip_threshold + (1.0 - clip_threshold) * (1 - (1 - excess) ** 3)
+            y = np.where(mask, sign * repaired, y)
 
-        # 3. Normalize to -3 dBFS (0.708 linear peak)
-        #    This is the most important step — TORGO was recorded at moderate
-        #    levels; your hot mic is 3-4x louder going into the MFCC.
+        # 3) Normalize to about -3 dBFS peak
         peak = np.abs(y).max()
         if peak > 0:
             y = y / peak * 0.708
 
-        # 4. Pad or trim to fixed window
-        target_len = int(self.sr * self.seconds)
-        if len(y) < target_len:
-            y = np.pad(y, (0, target_len - len(y)))
-        else:
-            y = y[:target_len]
-
         return y.astype(np.float32)
-
 
     def evaluate_csv(
         self,
